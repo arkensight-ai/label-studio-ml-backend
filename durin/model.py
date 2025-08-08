@@ -140,13 +140,15 @@ class GroundingDINO(LabelStudioMLBase):
             'result': results,
             'score': total_score,
         }
-
+        
     def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> List[Dict]:
+        predictions = []
+        for task in tasks:
+            prediction = self.predict_one_task(task)
+            predictions.append(prediction)
+        return ModelResponse(predictions=predictions)
 
-        print("TASKS", tasks, context)
-        assert len(tasks) == 1, "Only one task is supported for now"
-        task = tasks[0]
-
+    def predict_one_task(self, task: Dict, context: Optional[Dict] = None, **kwargs) -> List[Dict]:
         cap_list = self.labels
         prompt = ". ".join(map(str.lower, cap_list)) + "."
         if not prompt:
@@ -219,7 +221,7 @@ class GroundingDINO(LabelStudioMLBase):
 
         predictions = self.get_results(all_points, all_scores, label_names, all_lengths, from_name_r, to_name_r)
 
-        return ModelResponse(predictions=[predictions])
+        return predictions
 
     def fit(self, event, data, **additional_params):
         logger.debug(f'Data received: {data}')
